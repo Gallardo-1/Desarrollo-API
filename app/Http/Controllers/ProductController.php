@@ -13,11 +13,17 @@ class ProductController extends Controller
      */
     public function index()
     {
-        //
-        $products = Product::all();
+        
+        $products = Product::withAvg('ratings', 'rating')->get();
+        $products = $products->map(function ($product) {
+            $product->average_rating = round($product->ratings_avg_rating ?? 0, 2);
+            unset($product->ratings_avg_rating);
+            return $product;
+        });
+        
         return response()->json([
             'data' => $products,
-            'message' => 'Products retrieved successfully',
+            'message' => 'Products retrieved successfully with average ratings',
             'status' => 200
         ], 200);
 
@@ -50,7 +56,17 @@ class ProductController extends Controller
      */
     public function show(Product $product)
     {
-        //
+        $product->loadAvg('ratings', 'rating');
+        $averageRating = round($product->ratings_avg_rating ?? 0, 2);
+        
+        unset($product->ratings_avg_rating);
+        
+        return response()->json([
+            'data' => $product,
+            'average_rating' => $averageRating,
+            'message' => 'Product retrieved successfully',
+            'status' => 200
+        ], 200);
     }
 
     /**
