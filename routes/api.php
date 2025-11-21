@@ -21,6 +21,10 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::middleware('auth:sanctum')->post('/products/{product}/ratings', [RatingController::class, 'store']); 
 //ENDPOINT PARA OBTENER EL PRODUCTO MEJOR VALORADO 
 Route::get('/products/best-rated', [RatingController::class, 'bestRatedProduct']);
+//ENDPOINT PARA OBTENER LAS ESTADÍSTICAS DE VALORACION DE UN PRODUCTO ESPECIFICO
+Route::get('/products/{product}/ratings/stats', [RatingController::class, 'showProductRating']);
+//ENPOINT PARA ELIMINAR UNA VALORACION
+Route::middleware('auth:sanctum')->delete('/products/{product}/ratings', [RatingController::class, 'destroy']);
 
 // endpoint para registrar usuarios
 //localhost:8000/api/register

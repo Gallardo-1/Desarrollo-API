@@ -54,20 +54,24 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Product $product)
-    {
-        $product->loadAvg('ratings', 'rating');
-        $averageRating = round($product->ratings_avg_rating ?? 0, 2);
-        
-        unset($product->ratings_avg_rating);
-        
-        return response()->json([
-            'data' => $product,
-            'average_rating' => $averageRating,
-            'message' => 'Product retrieved successfully',
-            'status' => 200
-        ], 200);
-    }
+   public function show(Product $product)
+{
+    
+    $product->loadAvg('ratings', 'rating')
+            ->loadCount('ratings'); 
+            
+    $averageRating = round($product->ratings_avg_rating ?? 0, 2);
+    
+    unset($product->ratings_avg_rating);
+    
+    return response()->json([
+        'data' => $product,
+        'average_rating' => $averageRating,
+        'ratings_count' => $product->ratings_count, 
+        'message' => 'Product retrieved successfully',
+        'status' => 200
+    ], 200);
+}
 
     /**
      * Show the form for editing the specified resource.
