@@ -16,8 +16,6 @@ class RatingController extends Controller
         $request->validate([
             'rating' => 'required|integer|min:1|max:5', 
         ]);
-
-        // Aquí se asume que $request->user() existe gracias al middleware 'auth:sanctum'.
         $user = $request->user();
         
         $rating = Rating::updateOrCreate(
@@ -54,5 +52,39 @@ class RatingController extends Controller
             'message' => 'Best rated product retrieved successfully',
             'status' => 200
         ], 200);
+    }
+
+    public function showProductRating(Product $product)
+    {
+        $product->loadAvg('ratings', 'rating')
+                ->loadCount('ratings');
+
+        return response()->json([
+            'product_id' => $product->id,
+            'average_rating' => round($product->ratings_avg_rating ?? 0, 2),
+            'rating_count' => $product->ratings_count,
+            'message' => 'Product rating statistics retrieved successfully',
+            'status' => 200
+        ], 200);
+    }
+
+    public function destroy(Request $request, Product $product)
+    {
+        $user = $request->user();
+
+        $deleted = Rating::where('product_id', $product->id)
+                          ->where('user_id', $user->id)
+                          ->delete();
+
+        if ($deleted) {
+            return response()->json([
+                'message' => 'Rating deleted successfully',
+                'status' => 200
+            ], 200);
+        }
+        return response()->json([
+            'message' => 'No rating found for this user and product to delete.',
+            'status' => 404
+        ], 404);
     }
 }
