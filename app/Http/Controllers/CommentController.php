@@ -94,7 +94,7 @@ class CommentController extends Controller
         //
         try {
             // buscamos el comentario por id
-            $comment = Comment::FindOrFail($id);
+            $comment = Comment::findOrFail($id);
 
             //actualizamos el comentario
             $comment->update($request->all());
@@ -121,7 +121,7 @@ class CommentController extends Controller
         // 
         try {
             // buscamos el comentario por id
-            $comment = Comment::FindOrFail($id);
+            $comment = Comment::findOrFail($id);
 
             // eliminamos el comentario
             $comment->delete();
