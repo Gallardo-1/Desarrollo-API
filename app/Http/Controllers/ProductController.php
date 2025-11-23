@@ -29,26 +29,30 @@ class ProductController extends Controller
 
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
+    
+    
     public function store(Request $request)
     {
         //
-        $product = Product::Create($request->all());
+        try{ 
+        $request->validate([
+        'name' => 'required|string|max:255',
+        'description' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        ]);
+
+        $product = Product::create($request->only(['name','description','price']));
         return response()->json([
             'data' => $product,
             'message' => 'Product created successfully',
             'status' => 201
         ], 201);
+        }catch(Exception $error){
+        return response()->json([
+                'message' => 'Error updating product: ' . $error->getMessage(),
+                'status' => 500
+            ], 500);
+        }
     }
 
     /**
@@ -73,17 +77,8 @@ class ProductController extends Controller
     ], 200);
 }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
+    
+    
     public function update(Request $request, string $id)
     {
         //

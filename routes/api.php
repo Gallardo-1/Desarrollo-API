@@ -1,22 +1,28 @@
 <?php
 
-use App\Http\Controllers\ComentController;
+
 use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ProductController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\UserController;
-use Dom\Comment;
+
 
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+//ENDPOINT DE CRUD
 
 Route::get('/products', [ProductController::class, 'index']);
+Route::middleware('auth:sanctum')->group(function () {
 Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
-Route::delete('/products/{id}', [ProductController::class, 'destroy']); 
+Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+});
+
+ Route::get('/products/{product}', [ProductController::class, 'show']);
+
 //ENDPOINT PARA AGREGAR/ACTUALIZAR PUNTUACIONES
 Route::middleware('auth:sanctum')->post('/products/{product}/ratings', [RatingController::class, 'store']); 
 //ENDPOINT PARA OBTENER EL PRODUCTO MEJOR VALORADO 
@@ -39,10 +45,14 @@ Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanc
 // endpoint para comentarios
 // localhost:8000/api/comments
 // crear comentarios
-Route::post('/comments', [CommentController::class, 'store'])->middleware('auth:sanctum');
+
+Route::middleware('auth:sanctum')->group(function () {
+
+Route::post('/comments', [CommentController::class, 'store']);
 // obtener comentarios
-Route::get('/comments', [CommentController::class, 'index'])->middleware('auth:sanctum');
+Route::get('/comments', [CommentController::class, 'index']);
 // actualizar comentarios
-Route::put('/commets/{id}', [CommentController::class, 'update'])->middleware('auth:sanctum');
+Route::put('/comments/{id}', [CommentController::class, 'update']);
 // eliminar comentarios
-Route::delete('/comments/{id}', [CommentController::class, 'destroy'])->middleware('auth:sanctum');
+Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
+});
