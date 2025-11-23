@@ -12,8 +12,11 @@ use App\Http\Controllers\UserController;
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
-//ENDPOINT DE CRUD
 
+//ENDPOINT PARA OBTENER EL PRODUCTO MEJOR VALORADO 
+Route::get('/products/best-rated', [RatingController::class, 'bestRatedProduct']);
+
+//ENDPOINT DE CRUD
 Route::get('/products', [ProductController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
 Route::post('/products', [ProductController::class, 'store']);
@@ -23,14 +26,17 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
  Route::get('/products/{product}', [ProductController::class, 'show']);
 
-//ENDPOINT PARA AGREGAR/ACTUALIZAR PUNTUACIONES
-Route::middleware('auth:sanctum')->post('/products/{product}/ratings', [RatingController::class, 'store']); 
-//ENDPOINT PARA OBTENER EL PRODUCTO MEJOR VALORADO 
-Route::get('/products/best-rated', [RatingController::class, 'bestRatedProduct']);
-//ENDPOINT PARA OBTENER LAS ESTADÍSTICAS DE VALORACION DE UN PRODUCTO ESPECIFICO
+ //ENDPOINT PARA OBTENER LAS ESTADÍSTICAS DE VALORACION DE UN PRODUCTO ESPECIFICO
 Route::get('/products/{product}/ratings/stats', [RatingController::class, 'showProductRating']);
+ Route::middleware('auth:sanctum')->group(function() {
+//ENDPOINT PARA AGREGAR PUNTUACIONES
+Route::post('/products/{product}/ratings', [RatingController::class, 'store']); 
+//ENPOINT PARA ACTUALIZAR PUNTUACIONES
+Route::put('/products/{product}/ratings',  [RatingController::class, 'update']);
 //ENPOINT PARA ELIMINAR UNA VALORACION
-Route::middleware('auth:sanctum')->delete('/products/{product}/ratings', [RatingController::class, 'destroy']);
+Route::delete('/products/{product}/ratings', [RatingController::class, 'destroy']);
+ });
+
 
 // endpoint para registrar usuarios
 //localhost:8000/api/register
