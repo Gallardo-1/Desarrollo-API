@@ -60,8 +60,8 @@ class ProductController extends Controller
      */
    public function show(Product $product)
 {
-    
-    $product->loadAvg('ratings', 'rating')
+     $product->load(['ratings.user'])
+        ->loadAvg('ratings', 'rating')
             ->loadCount('ratings'); 
             
     $averageRating = round($product->ratings_avg_rating ?? 0, 2);
