@@ -30,11 +30,11 @@ Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 Route::get('/products/{product}/ratings/stats', [RatingController::class, 'showProductRating']);
  Route::middleware('auth:sanctum')->group(function() {
 //ENDPOINT PARA AGREGAR PUNTUACIONES
-Route::post('/products/{product}/ratings', [RatingController::class, 'store']); 
+Route::post('/ratings', [RatingController::class, 'store']); 
 //ENPOINT PARA ACTUALIZAR PUNTUACIONES
-Route::put('/products/{product}/ratings',  [RatingController::class, 'update']);
+Route::put('/ratings/{id}',  [RatingController::class, 'update']);
 //ENPOINT PARA ELIMINAR UNA VALORACION
-Route::delete('/products/{product}/ratings', [RatingController::class, 'destroy']);
+Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
  });
 
 

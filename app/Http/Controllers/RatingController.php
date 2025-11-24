@@ -13,50 +13,43 @@ class RatingController extends Controller
     /**
      * Almacena o actualiza una valoración para un producto (Requiere Autenticación).
      */
-   public function store(Request $request, $product_id)
+   public function store(Request $request)
 {
-        try {
-        // Validación
+    try {
         $request->validate([
-        'rating' => 'required|integer|min:1|max:5',
+            'product_id' => 'required|exists:products,id',
+            'rating' => 'required|integer|min:1|max:5',
         ]);
 
-            $user = $request->user();
+        $user = $request->user();
 
-            // Verificar si ya existe valoración del usuario
-            $exists = Rating::where('user_id', $user->id)
-                    ->where('product_id', $product_id)
-                    ->exists();
+        // Verificar si ya existe valoración
+        $exists = $user->ratings()
+                      ->where('product_id', $request->product_id)
+                      ->exists();
 
         if ($exists) {
-         return response()->json([
-            'message' => 'Ya valoraste este producto. Usa UPDATE para modificar tu calificación.',
-            'status' => 409
-        ], 409);
+            return response()->json([
+                'message' => 'Ya valoraste este producto. Usa UPDATE para modificar tu calificación.',
+                'status' => 409
+            ], 409);
+        }
+
+        $rating = $user->ratings()->create($request->all());
+
+        return response()->json([
+            'message' => 'Valoración creada correctamente',
+            'data' => $rating,
+            'status' => 201
+        ], 201);
+        
+    } catch (\Exception $error) {
+        return response()->json([
+            'error' => $error->getMessage(),
+            'status' => 500
+        ], 500);
     }
-
-         $rating = Rating::create([
-        'rating'     => $request->rating,
-        'product_id' => $product_id,
-        'user_id'    => $user->id,
-    ]);
-
-         return response()->json([
-        'message' => 'Valoración creada correctamente',
-        'data'    => $rating,
-        'status'  => 201
-    ], 201);
-    
-}   catch (\Exception $error) {
-    return response()->json([
-        'error'  => $error->getMessage(),
-        'status' => 500
-    ], 500);
 }
-
-}
-
-
 
     /**
      * Obtiene el producto con la mejor valoración promedio.
@@ -91,8 +84,6 @@ class RatingController extends Controller
         'status' => 500
         ], 500);
 }
-
-
 }
 
 //mostrar las estadisticas de un producto 
@@ -121,63 +112,68 @@ class RatingController extends Controller
     }
 }
 
-
-public function update(Request $request, $product_id)
+public function update(Request $request, string $id)  
 {
-        try {
+    try {
         $request->validate([
-        'rating' => 'required|integer|min:1|max:5'
+            'rating' => 'required|integer|min:1|max:5'
         ]);
 
-    $user = $request->user();
+       
+        $rating = Rating::findOrFail($id);
 
-    // Buscar rating o fallar
-    $rating = Rating::where('product_id', $product_id)
-                    ->where('user_id', $user->id)
-                    ->firstOrFail();
-    $rating->update([
-        'rating' => $request->rating
-    ]);
+        // Verificar que pertenece al usuario 
+        if ($rating->user_id != $request->user()->id) {
+            return response()->json([
+                'message' => 'No puedes modificar esta valoración',
+                'status' => 403
+            ], 403);
+        }
 
-    return response()->json([
-        'message' => 'Valoración actualizada correctamente',
-        'data'    => $rating,
-        'status'  => 200
-    ], 200);
+        $rating->update($request->all());
 
-} catch (\Exception $error) {
-    return response()->json([
-        'error'  => $error->getMessage(),
-        'status' => 500
-    ], 500);
+        return response()->json([
+            'message' => 'Valoración actualizada correctamente',
+            'data'    => $rating,
+            'status'  => 200
+        ], 200);
+
+    } catch (\Exception $error) {
+        return response()->json([
+            'error'  => $error->getMessage(),
+            'status' => 500
+        ], 500);
+    }
 }
-}
 
-    public function destroy(Request $request, Product $product)
-    {
+public function destroy(Request $request, string $id)
+{
     try {
         $user = $request->user();
 
-        // Usamos la relación del usuario
-        $deleted = $user->ratings()
-                        ->where('product_id', $product->id)
-                        ->delete();
+        // Buscar el rating por ID y verificar que pertenece al usuario
+        $rating = Rating::where('id', $id)
+                        ->where('user_id', $user->id)
+                        ->first();
 
-        if ($deleted) {
+        if (!$rating) {
             return response()->json([
-                'message' => 'Valoración eliminada correctamente',
-                'status'   => 200
-            ], 200);
+                'message' => 'No se encontró la valoración que desea eliminar',
+                'status' => 404
+            ], 404);
         }
 
+        // Eliminar el rating
+        $rating->delete();
+
         return response()->json([
-            'message' => 'No se encontró la valoración que desea eliminar',
-            'status'  => 404
-        ], 404);
+            'message' => 'Valoración eliminada correctamente',
+            'status' => 200
+        ], 200);
 
     } catch (Exception $error) {
         return response()->json([
-            'error'  => 'Error al eliminar puntuación',
+            'error' => 'Error al eliminar puntuación: ' . $error->getMessage(),
             'status' => 500
         ], 500);
     }
