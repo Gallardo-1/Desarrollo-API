@@ -22,12 +22,13 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::post('/products', [ProductController::class, 'store']);
 Route::put('/products/{id}', [ProductController::class, 'update']);
 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
+
 });
 
  Route::get('/products/{product}', [ProductController::class, 'show']);
 
- //ENDPOINT PARA OBTENER LAS ESTADÍSTICAS DE VALORACION DE UN PRODUCTO ESPECIFICO
-Route::get('/products/{product}/ratings/stats', [RatingController::class, 'showProductRating']);
+// index de ratings
+Route::get('/ratings', [RatingController::class, 'index']);
  Route::middleware('auth:sanctum')->group(function() {
 //ENDPOINT PARA AGREGAR PUNTUACIONES
 Route::post('/ratings', [RatingController::class, 'store']); 
@@ -35,6 +36,8 @@ Route::post('/ratings', [RatingController::class, 'store']);
 Route::put('/ratings/{id}',  [RatingController::class, 'update']);
 //ENPOINT PARA ELIMINAR UNA VALORACION
 Route::delete('/ratings/{id}', [RatingController::class, 'destroy']);
+//restaurar una valoracion
+Route::put('/ratings/{id}/restore', [RatingController::class, 'restore']);
  });
 
 

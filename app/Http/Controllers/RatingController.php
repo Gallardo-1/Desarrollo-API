@@ -10,6 +10,28 @@ use Exception;
 
 class RatingController extends Controller
 {
+
+
+    public function index()
+{
+    try {
+        $ratings = Rating::with('user:id,name', 'product:id,name')
+            ->latest()
+            ->get(['id', 'rating', 'user_id', 'product_id', 'created_at']);
+
+        return response()->json([
+            'message' => 'Todas las valoraciones obtenidas exitosamente',
+            'data' => $ratings,
+            'status' => 200
+        ], 200);
+
+    } catch (Exception $error) {
+        return response()->json([
+            'error' => 'Error al obtener las valoraciones',
+            'status' => 500
+        ], 500);
+    }
+}
     /**
      * Almacena o actualiza una valoración para un producto (Requiere Autenticación).
      */
@@ -23,14 +45,15 @@ class RatingController extends Controller
 
         $user = $request->user();
 
-        // Verificar si ya existe valoración
-        $exists = $user->ratings()
+        // Verificar si ya existe valoración 
+        $existingRating = $user->ratings()
                       ->where('product_id', $request->product_id)
-                      ->exists();
+                      ->first();  
 
-        if ($exists) {
+        if ($existingRating) {
             return response()->json([
                 'message' => 'Ya valoraste este producto. Usa UPDATE para modificar tu calificación.',
+                'rating_id' => $existingRating->id, 
                 'status' => 409
             ], 409);
         }
@@ -54,59 +77,33 @@ class RatingController extends Controller
     /**
      * Obtiene el producto con la mejor valoración promedio.
      */
-    public function bestRatedProduct()
+   public function bestRatedProduct()
 {
-        try {
-            $bestProduct = Product::withAvg('ratings as average_rating', 'rating')
-            ->withCount('ratings')
-            ->whereHas('ratings')               // Solo productos con calificaciones
+    try {
+        $bestProduct = Product::withAvg('ratings as average_rating', 'rating')
+            ->withCount('ratings') 
+            ->whereHas('ratings')
             ->orderByDesc('average_rating')
             ->first();
 
         if (!$bestProduct) {
-        return response()->json([
-            'message' => 'No hay productos calificados disponibles.',
-            'status' => 404
-        ], 404);
-    }
+            return response()->json([
+                'message' => 'No hay productos calificados disponibles.',
+                'status' => 404
+            ], 404);
+        }
 
         return response()->json([
-        'data' => $bestProduct,
-        'average_rating' => round($bestProduct->average_rating, 2),
-        'total_ratings' => $bestProduct->ratings()->count(),
-        'message' => 'Mejor producto calificado obtenido exitosamente',
-        'status' => 200
-     ], 200);
-
-        } catch (Exception $error) {
-        return response()->json([
-        'error' => 'Error al obtener el mejor producto calificado',
-        'status' => 500
-        ], 500);
-}
-}
-
-//mostrar las estadisticas de un producto 
-    public function showProductRating(Product $product)
-{
-    try {
-        $product->loadAvg('ratings as average_rating', 'rating')
-                ->loadCount('ratings');
-
-        return response()->json([
-            'data' => [
-                'product_id' => $product->id,
-                'product_name' => $product->name, 
-                'average_rating' => round($product->average_rating ?? 0, 2),
-                'rating_count' => $product->ratings_count,
-            ],
-            'message' => 'estadisticas del producto obtenidas correctamente',
+            'data' => $bestProduct,
+            'average_rating' => round($bestProduct->average_rating, 2),
+            'total_ratings' => $bestProduct->ratings_count, 
+            'message' => 'Mejor producto calificado obtenido exitosamente',
             'status' => 200
         ], 200);
 
     } catch (Exception $error) {
         return response()->json([
-            'error' => 'error al obtener las estadisticas',
+            'error' => 'Error al obtener el mejor producto calificado',
             'status' => 500
         ], 500);
     }
@@ -118,8 +115,6 @@ public function update(Request $request, string $id)
         $request->validate([
             'rating' => 'required|integer|min:1|max:5'
         ]);
-
-       
         $rating = Rating::findOrFail($id);
 
         // Verificar que pertenece al usuario 
@@ -146,34 +141,42 @@ public function update(Request $request, string $id)
     }
 }
 
-public function destroy(Request $request, string $id)
+public function destroy( string $id)
 {
     try {
-        $user = $request->user();
+    
+            $rating = Rating::findOrFail($id);
 
-        // Buscar el rating por ID y verificar que pertenece al usuario
-        $rating = Rating::where('id', $id)
-                        ->where('user_id', $user->id)
-                        ->first();
+            $rating->delete();
 
-        if (!$rating) {
             return response()->json([
-                'message' => 'No se encontró la valoración que desea eliminar',
-                'status' => 404
-            ], 404);
-        }
-
-        // Eliminar el rating
-        $rating->delete();
-
-        return response()->json([
-            'message' => 'Valoración eliminada correctamente',
-            'status' => 200
-        ], 200);
+                'message' => 'Rating Deleted Successfully',
+                'status' => 200
+            ],200);
 
     } catch (Exception $error) {
         return response()->json([
             'error' => 'Error al eliminar puntuación: ' . $error->getMessage(),
+            'status' => 500
+        ], 500);
+    }
+}
+
+public function restore(string $id){
+    try {
+        $rating = Rating::withTrashed()->findOrFail($id);
+        $rating->restore();
+
+        return response()->json([
+            'message'=> 'Rating restaurado exitosamente',
+            'data' => $rating,
+            'status' => 200
+        ], 200);
+
+        
+    } catch (Exception $error) {
+        return response()->json([
+            'error' => 'Error al restaurar puntuación: ' . $error->getMessage(),
             'status' => 500
         ], 500);
     }

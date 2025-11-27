@@ -58,19 +58,15 @@ class ProductController extends Controller
     /**
      * Display the specified resource.
      */
-   public function show(Product $product)
+  public function show(Product $product)
 {
-     $product->load(['ratings.user'])
-        ->loadAvg('ratings', 'rating')
-            ->loadCount('ratings'); 
-            
-    $averageRating = round($product->ratings_avg_rating ?? 0, 2);
-    
-    unset($product->ratings_avg_rating);
+    $product->load(['ratings.user'])
+            ->loadAvg('ratings as average_rating', 'rating')
+            ->loadCount('ratings as ratings_count'); 
     
     return response()->json([
         'data' => $product,
-        'average_rating' => $averageRating,
+        'average_rating' => round($product->average_rating ?? 0, 2),
         'ratings_count' => $product->ratings_count, 
         'message' => 'Product retrieved successfully',
         'status' => 200
