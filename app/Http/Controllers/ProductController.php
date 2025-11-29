@@ -116,4 +116,23 @@ class ProductController extends Controller
             ], 500);
         }   
     }
+
+        public function showDetail(Product $product)
+    {
+        $product->load(['ratings.user', 'comments.user'])
+                ->loadAvg('ratings as average_rating', 'rating')
+                ->loadCount('ratings as ratings_count');
+        
+        // Calcular distribución de ratings
+        $ratingDistribution = [
+            5 => $product->ratings()->where('rating', 5)->count(),
+            4 => $product->ratings()->where('rating', 4)->count(),
+            3 => $product->ratings()->where('rating', 3)->count(),
+            2 => $product->ratings()->where('rating', 2)->count(),
+            1 => $product->ratings()->where('rating', 1)->count(),
+        ];
+        
+        return view('product-detail', compact('product', 'ratingDistribution'));
+    }
 }
+

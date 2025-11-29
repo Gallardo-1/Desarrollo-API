@@ -4,6 +4,7 @@
 
 @section('styles')
     <link rel="stylesheet" href="{{ asset('css/home.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/product-detail.css') }}?v={{ time() }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 @endsection
 
@@ -12,7 +13,7 @@
     <div class="container">
         <h2 class="section-title"><span>A</span>rtículos <span>C</span>oleccionables</h2>
         <div class="products-grid">
-            @for($i = 1; $i <= 3; $i++)
+            @for($i = 1; $i <= 6; $i++)
             <div class="product-card">
                 <div class="product-image">
                     <img src="{{ asset('img/Coleccin.jpg') }}" alt="Coleccionable {{ $i }}">
@@ -28,7 +29,12 @@
                         <i class="far fa-star"></i>
                         <span class="rating-count">(4.0)</span>
                     </div>
-                    <button class="btn btn-primary">Agregar al Carrito</button>
+                    <button class="btn-primary" onclick="addToCart({{ $i }})">
+                        <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+                    </button>
+                    <a href="{{ route('product.detail', ['product' => $i]) }}" class="btn-view-detail">
+                        <i class="fas fa-eye"></i> Ver Detalle
+                    </a>
                 </div>
             </div>
             @endfor
@@ -39,12 +45,8 @@
 
 @section('scripts')
 <script>
-window.onload = function() {
-    const token = localStorage.getItem('auth_token');
-    if (!token) {
-        window.location.href = '/';
-        return;
+    function addToCart(productId) {
+        alert('Coleccionable ' + productId + ' agregado al carrito (funcionalidad pendiente)');
     }
-};
 </script>
 @endsection
