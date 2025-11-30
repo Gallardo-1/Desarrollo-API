@@ -13,8 +13,8 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-//ENDPOINT PARA OBTENER EL PRODUCTO MEJOR VALORADO 
-Route::get('/products/best-rated', [RatingController::class, 'bestRatedProduct']);
+//ENDPOINT PARA OBTENER LOS 3 PRODUCTO MEJOR VALORADO 
+Route::get('/products/top-3-rated', [RatingController::class, 'topRatedProducts']);
 
 //ENDPOINT DE CRUD
 Route::get('/products', [ProductController::class, 'index']);

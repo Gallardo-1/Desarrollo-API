@@ -73,41 +73,40 @@ class RatingController extends Controller
         ], 500);
     }
 }
-
-    /**
-     * Obtiene el producto con la mejor valoración promedio.
+/**
+     * Obtiene los PRIMEROS 3 productos mejor rankeados.
      */
-   public function bestRatedProduct()
-{
-    try {
-        $bestProduct = Product::withAvg('ratings as average_rating', 'rating')
-            ->withCount('ratings') 
-            ->whereHas('ratings')
-            ->orderByDesc('average_rating')
-            ->first();
+    public function topRatedProducts()
+    {
+        try {
+            $topProducts = Product::withAvg('ratings as average_rating', 'rating')
+                ->withCount('ratings') 
+                ->whereHas('ratings') 
+                ->orderByDesc('average_rating')
+                ->take(3) 
+                ->get();
 
-        if (!$bestProduct) {
+            if ($topProducts->isEmpty()) {
+                return response()->json([
+                    'message' => 'No hay productos calificados disponibles para el top 3.',
+                    'status' => 404
+                ], 404);
+            }
+
             return response()->json([
-                'message' => 'No hay productos calificados disponibles.',
-                'status' => 404
-            ], 404);
+                'data' => $topProducts,
+                'message' => 'Los 3 mejores productos calificados obtenidos exitosamente',
+                'status' => 200
+            ], 200);
+
+        } catch (Exception $error) {
+            return response()->json([
+                'error' => 'Error al obtener el top 3 de productos calificados: ' . $error->getMessage(),
+                'status' => 500
+            ], 500);
         }
-
-        return response()->json([
-            'data' => $bestProduct,
-            'average_rating' => round($bestProduct->average_rating, 2),
-            'total_ratings' => $bestProduct->ratings_count, 
-            'message' => 'Mejor producto calificado obtenido exitosamente',
-            'status' => 200
-        ], 200);
-
-    } catch (Exception $error) {
-        return response()->json([
-            'error' => 'Error al obtener el mejor producto calificado',
-            'status' => 500
-        ], 500);
     }
-}
+
 
 public function update(Request $request, string $id)  
 {
