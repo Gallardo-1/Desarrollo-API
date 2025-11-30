@@ -123,9 +123,9 @@
                         </div>
 
                         <div class="team-member">
-                            <img src="{{ asset('img/team/member6.jpg') }}" alt="Miembro 6">
-                            <h4>Nombre Miembro 6</h4>
-                            <a href="https://github.com/usuario6" target="_blank" class="github-link">
+                            <img src="https://avatars.githubusercontent.com/u/219189294?v=4" alt="Miembro 6">
+                            <h4>Yamileth Cerén</h4>
+                            <a href="https://github.com/YamiCeren" target="_blank" class="github-link">
                                 <i class="fab fa-github"></i>
                             </a>
                         </div>
