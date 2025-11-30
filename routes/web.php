@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\WebController;
+use App\Http\Controllers\ProductController;
 
 Route::get('/', [WebController::class, 'login'])->name('login');
 Route::get('/register', [WebController::class, 'register'])->name('register');
@@ -20,3 +21,6 @@ Route::get('/cards', function () {
 Route::get('/collectibles', function () {
     return view('collectibles');
 })->name('collectibles');
+
+Route::get('/product/{product}', [ProductController::class, 'showDetail'])
+    ->name('product.detail');
