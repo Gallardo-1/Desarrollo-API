@@ -39,9 +39,11 @@ class ProductController extends Controller
         'name' => 'required|string|max:255',
         'description' => 'nullable|string',
         'price' => 'required|numeric|min:0',
+        'image_url' => 'nullable|string',
+        'stock' => 'required|integer|min:0',
         ]);
 
-        $product = Product::create($request->only(['name','description','price']));
+        $product = Product::create($request->only(['name','description','price', 'image_url', 'stock']));
         return response()->json([
             'data' => $product,
             'message' => 'Product created successfully',
@@ -79,8 +81,15 @@ class ProductController extends Controller
     {
         //
         try{
+            $request->validate([
+                'name' => 'sometimes|required|string|max:255',
+                'description' => 'sometimes|nullable|string',
+                'price' => 'sometimes|required|numeric|min:0',
+                'image_url' => 'sometimes|nullable|string',
+                'stock' => 'sometimes|required|integer|min:0',
+            ]);
             $product = Product::findorFail($id);
-            $product->update($request->all());
+            $product->update($request->only(['name','description','price', 'image_url', 'stock']));
             return response()->json([
                 'data' => $product,
                 'message' => 'Product updated successfully',
