@@ -3,9 +3,10 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
-use App\Models\User;
-use App\Models\Product;
+use App\Models\Rating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class CommentController extends Controller
 {
@@ -17,7 +18,7 @@ class CommentController extends Controller
         //
         try {
             // obtenemos todos los comentarios  con sus relaciones
-            $comments = Comment::with(['user', 'product'])->get();
+            $comments = Comment::with(['user', 'product'])->latest()->get();
 
             return response()->json([
                 'data' => $comments,
@@ -45,27 +46,69 @@ class CommentController extends Controller
      */
     public function store(Request $request)
     {
-        //
-        //
+        // Verificar que el usuario esté autenticado
+        if (!auth()->check()) {
+            return response()->json([
+                'message' => 'No autenticado'
+            ], 401);
+        }
+
+        $validator = Validator::make($request->all(), [
+            'product_id' => 'required|exists:products,id',
+            'content' => 'required|string',
+            'rating' => 'required|integer|min:1|max:5'
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
         try {
-            $request->validate([
-                'product_id' => 'required|exists:products,id',
-                'content' => 'required|string',
+            Log::info('Creando comentario', [
+                'user_id' => auth()->id(),
+                'product_id' => $request->product_id
             ]);
 
-            // create coment con modelos relacionados
-            $comment = $request->user()->comments()->create($request->all());
+            // Crear el comentario
+            $comment = Comment::create([
+                'product_id' => $request->product_id,
+                'user_id' => auth()->id(),
+                'content' => $request->content
+            ]);
+
+            // Crear o actualizar el rating
+            $rating = Rating::updateOrCreate(
+                [
+                    'product_id' => $request->product_id,
+                    'user_id' => auth()->id()
+                ],
+                [
+                    'rating' => $request->rating
+                ]
+            );
+
+            Log::info('Comentario creado exitosamente', [
+                'comment_id' => $comment->id,
+                'rating_id' => $rating->id
+            ]);
 
             return response()->json([
-                'data' => $comment,
-                'message' => 'Comment created successfully',
-                'status' => 201
+                'message' => 'Comentario y valoración guardados exitosamente',
+                'comment' => $comment,
+                'rating' => $rating
             ], 201);
         } catch (\Exception $e) {
-            //
+            Log::error('Error al guardar comentario', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
-                'message' => 'Error creating comment: ' . $e->getMessage(),
-                'status' => 500
+                'message' => 'Error al guardar el comentario',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -89,26 +132,42 @@ class CommentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(string $id, Request $request)
+    public function update(Request $request, $id)
     {
         //
         try {
-            // buscamos el comentario por id
             $comment = Comment::findOrFail($id);
 
-            //actualizamos el comentario
-            $comment->update($request->all());
+            // Verificar que el usuario sea el dueño del comentario
+            if ($comment->user_id !== auth()->id()) {
+                return response()->json([
+                    'message' => 'No autorizado'
+                ], 403);
+            }
+
+            $validator = Validator::make($request->all(), [
+                'content' => 'required|string'
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            $comment->update([
+                'content' => $request->content
+            ]);
 
             return response()->json([
-                'data' => $comment,
-                'message' => 'Comment updated successfully',
-                'status' => 200
-            ], 200);
+                'message' => 'Comentario actualizado exitosamente',
+                'comment' => $comment
+            ]);
         } catch (\Exception $e) {
-            //
             return response()->json([
-                'message' => 'Error updating comment:' . $e->getMessage(),
-                'status' => 500
+                'message' => 'Error al actualizar el comentario',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
@@ -116,25 +175,27 @@ class CommentController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Request $request, string $id)
+    public function destroy($id)
     {
-        // 
         try {
-            // buscamos el comentario por id
             $comment = Comment::findOrFail($id);
 
-            // eliminamos el comentario
+            // Verificar que el usuario sea el dueño del comentario
+            if ($comment->user_id !== auth()->id()) {
+                return response()->json([
+                    'message' => 'No autorizado'
+                ], 403);
+            }
+
             $comment->delete();
 
             return response()->json([
-                'message' => 'Comment deleted successfully',
-                'status' => 200
-            ], 200);
+                'message' => 'Comentario eliminado exitosamente'
+            ]);
         } catch (\Exception $e) {
-            //
             return response()->json([
-                'message' => 'Error deleting comment: ' . $e->getMessage(),
-                'status' => 500
+                'message' => 'Error al eliminar el comentario',
+                'error' => $e->getMessage()
             ], 500);
         }
     }

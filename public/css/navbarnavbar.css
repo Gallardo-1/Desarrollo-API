@@ -154,7 +154,7 @@
 
 /* Navbar Inferior - Menú de Navegación */
 .navbar-bottom {
-    background: #FF1EA8;
+    background-color: #FFEEF8;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     position: sticky;
     top: 82px;

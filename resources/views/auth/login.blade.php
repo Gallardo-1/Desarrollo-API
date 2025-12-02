@@ -3,7 +3,7 @@
 @section('title', 'Iniciar Sesión')
 
 @section('styles')
-    <link rel="stylesheet" href="{{ asset('css/auth.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/auth.css') }}?v=1.0">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -54,6 +54,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': token
             },
             body: JSON.stringify({ email, password })
@@ -63,12 +64,23 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
         
         if (response.ok) {
             localStorage.setItem('auth_token', data.access_token);
+            localStorage.setItem('user_data', JSON.stringify(data.user));
+            
             showAlert('¡Inicio de sesión exitoso!');
-            setTimeout(() => window.location.href = '/home', 1500);
+            
+            // Redirigir según el tipo de usuario
+            setTimeout(() => {
+                if (data.user && data.user.is_admin === true) {
+                    window.location.href = '/admin/products';
+                } else {
+                    window.location.href = '/home';
+                }
+            }, 1500);
         } else {
             showAlert(data.message || 'Error al iniciar sesión', 'error');
         }
     } catch (error) {
+        console.error('Error:', error);
         showAlert('Error de conexión', 'error');
     }
 });

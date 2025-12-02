@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RatingController;
 use App\Http\Controllers\UserController;
-
+use App\Http\Controllers\AuthController;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -17,15 +17,14 @@ Route::get('/user', function (Request $request) {
 Route::get('/products/top-3-rated', [RatingController::class, 'topRatedProducts']);
 
 //ENDPOINT DE CRUD
-Route::get('/products', [ProductController::class, 'index']);
+// Rutas de productos (protegidas por autenticación)
 Route::middleware('auth:sanctum')->group(function () {
-Route::post('/products', [ProductController::class, 'store']);
-Route::put('/products/{id}', [ProductController::class, 'update']);
-Route::delete('/products/{id}', [ProductController::class, 'destroy']);
-
+    Route::get('/products', [ProductController::class, 'index']);
+    Route::get('/products/{id}', [ProductController::class, 'show']);
+    Route::post('/products', [ProductController::class, 'store']);
+    Route::put('/products/{id}', [ProductController::class, 'update']);
+    Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 });
-
- Route::get('/products/{product}', [ProductController::class, 'show']);
 
 // index de ratings
 Route::get('/ratings', [RatingController::class, 'index']);
@@ -43,13 +42,13 @@ Route::put('/ratings/{id}/restore', [RatingController::class, 'restore']);
 
 // endpoint para registrar usuarios
 //localhost:8000/api/register
-Route::post('/register', [UserController::class, 'register']);
+Route::post('/register', [AuthController::class, 'register']);
 // endpoint para login de usuarios
 //localhost:8000/api/login
-Route::post('/login', [UserController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login']);
 // end point para logout de usuarios
 //localhost:8000/api/logout
-Route::post('/logout', [UserController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
 // endpoint para comentarios
 // localhost:8000/api/comments

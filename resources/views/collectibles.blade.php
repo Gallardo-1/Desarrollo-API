@@ -13,7 +13,7 @@
     <div class="container">
         <h2 class="section-title"><span>A</span>rtículos <span>C</span>oleccionables</h2>
         <div class="products-grid">
-            @for($i = 1; $i <= 6; $i++)
+            @for($i = 1; $i <= 3; $i++)
             <div class="product-card">
                 <div class="product-image">
                     <img src="{{ asset('img/Coleccin.jpg') }}" alt="Coleccionable {{ $i }}">
@@ -32,9 +32,6 @@
                     <button class="btn-primary" onclick="addToCart({{ $i }})">
                         <i class="fas fa-shopping-cart"></i> Agregar al Carrito
                     </button>
-                    <a href="{{ route('product.detail', ['product' => $i]) }}" class="btn-view-detail">
-                        <i class="fas fa-eye"></i> Ver Detalle
-                    </a>
                 </div>
             </div>
             @endfor
