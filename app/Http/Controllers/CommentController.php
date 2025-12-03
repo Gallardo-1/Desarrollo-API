@@ -67,6 +67,18 @@ class CommentController extends Controller
         }
 
         try {
+            // Verificar si el usuario ya comentó en este producto
+            $existingComment = Comment::where('product_id', $request->product_id)
+                                     ->where('user_id', auth()->id())
+                                     ->first();
+
+            if ($existingComment) {
+                return response()->json([
+                    'message' => 'Ya has comentado en este producto',
+                    'error' => 'Solo puedes escribir un comentario por producto'
+                ], 409); // 409 Conflict
+            }
+
             Log::info('Creando comentario', [
                 'user_id' => auth()->id(),
                 'product_id' => $request->product_id
@@ -195,6 +207,24 @@ class CommentController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'message' => 'Error al eliminar el comentario',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function checkUserComment($productId)
+    {
+        try {
+            $hasCommented = Comment::where('product_id', $productId)
+                                  ->where('user_id', auth()->id())
+                                  ->exists();
+
+            return response()->json([
+                'has_commented' => $hasCommented
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Error al verificar comentario',
                 'error' => $e->getMessage()
             ], 500);
         }

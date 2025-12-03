@@ -63,4 +63,7 @@ Route::get('/comments', [CommentController::class, 'index']);
 Route::put('/comments/{id}', [CommentController::class, 'update']);
 // eliminar comentarios
 Route::delete('/comments/{id}', [CommentController::class, 'destroy']);
+    
+    // Nueva ruta para verificar si el usuario ya comentó
+    Route::get('/comments/check-user-comment/{productId}', [CommentController::class, 'checkUserComment']);
 });

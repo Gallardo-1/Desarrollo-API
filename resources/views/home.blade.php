@@ -20,19 +20,24 @@
     </section>
 
     @if(isset($products) && $products->count() > 0)
-    {{-- Productos Destacados (últimos 3 productos) --}}
+    {{-- Productos Destacados (3 mejor valorados) --}}
     <section class="products-section">
         <div class="container">
             <h2 class="section-title"><span>D</span>estacados</h2>
             
             <div class="products-grid">
-                @foreach($products->take(3) as $product)
+                @forelse($topRatedProducts as $product)
                 <div class="product-card">
                     <a href="{{ route('product.detail', $product->id) }}" class="product-image-link">
                         <div class="product-image">
                             <img src="{{ $product->image ?? 'https://via.placeholder.com/300x300?text=Sin+Imagen' }}" 
                                  alt="{{ $product->name }}"
                                  onerror="this.src='https://via.placeholder.com/300x300?text=Error'">
+                            @if($product->average_rating >= 4.5)
+                            <div class="badge-featured">
+                                <i class="fas fa-star"></i> Top Rated
+                            </div>
+                            @endif
                         </div>
                     </a>
                     <div class="product-info">
@@ -40,7 +45,7 @@
                         <p class="product-price">${{ number_format($product->price, 2) }}</p>
                         <div class="product-rating">
                             @php
-                                $avgRating = $product->ratings->avg('rating') ?? 0;
+                                $avgRating = $product->average_rating;
                                 $fullStars = floor($avgRating);
                                 $hasHalfStar = ($avgRating - $fullStars) >= 0.5;
                             @endphp
@@ -61,7 +66,11 @@
                         </button>
                     </div>
                 </div>
-                @endforeach
+                @empty
+                <div class="col-12 text-center">
+                    <p>No hay productos destacados disponibles</p>
+                </div>
+                @endforelse
             </div>
         </div>
     </section>

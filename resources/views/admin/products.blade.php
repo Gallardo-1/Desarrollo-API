@@ -215,8 +215,14 @@ document.getElementById('productForm').addEventListener('submit', async function
     const authToken = localStorage.getItem('auth_token');
     
     if (!authToken) {
-        alert('No estás autenticado. Por favor inicia sesión.');
-        window.location.href = '/';
+        Swal.fire({
+            icon: 'warning',
+            title: 'No autenticado',
+            text: 'Por favor inicia sesión',
+            confirmButtonColor: '#667eea'
+        }).then(() => {
+            window.location.href = '/';
+        });
         return;
     }
     
@@ -226,13 +232,23 @@ document.getElementById('productForm').addEventListener('submit', async function
         price: parseFloat(document.getElementById('price').value),
         stock: parseInt(document.getElementById('stock').value),
         description: document.getElementById('description').value,
-        image: currentImageBase64 // Enviar imagen en base64
+        image: currentImageBase64
     };
     
     console.log('Datos a enviar:', productData);
     
     const url = productId ? `/api/products/${productId}` : '/api/products';
     const method = productId ? 'PUT' : 'POST';
+    
+    // Mostrar loading
+    Swal.fire({
+        title: productId ? 'Actualizando producto...' : 'Guardando producto...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
     
     try {
         const response = await fetch(url, {
@@ -249,9 +265,15 @@ document.getElementById('productForm').addEventListener('submit', async function
         console.log('Respuesta del servidor:', response.status);
         
         if (response.status === 401) {
-            alert('Sesión expirada. Por favor inicia sesión nuevamente.');
-            localStorage.removeItem('auth_token');
-            window.location.href = '/';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión expirada',
+                text: 'Por favor inicia sesión nuevamente',
+                confirmButtonColor: '#667eea'
+            }).then(() => {
+                localStorage.removeItem('auth_token');
+                window.location.href = '/';
+            });
             return;
         }
         
@@ -259,22 +281,51 @@ document.getElementById('productForm').addEventListener('submit', async function
         console.log('Resultado:', result);
         
         if (response.ok) {
-            alert(result.message || 'Operación exitosa');
-            resetForm();
-            loadProducts();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Éxito!',
+                text: productId ? 'Producto actualizado correctamente' : 'Producto creado correctamente',
+                confirmButtonColor: '#667eea',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            }).then(() => {
+                resetForm();
+                loadProducts();
+            });
         } else {
-            alert(result.message || 'Error al guardar el producto');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: result.message || 'Error al guardar el producto',
+                confirmButtonColor: '#667eea'
+            });
             console.error('Error:', result);
         }
     } catch (error) {
         console.error('Error completo:', error);
-        alert('Error al conectar con el servidor: ' + error.message);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor',
+            confirmButtonColor: '#667eea'
+        });
     }
 });
 
 // Editar producto
 async function editProduct(id) {
     const authToken = localStorage.getItem('auth_token');
+    
+    // Mostrar loading
+    Swal.fire({
+        title: 'Cargando producto...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
     
     try {
         const response = await fetch(`/api/products/${id}`, {
@@ -286,9 +337,15 @@ async function editProduct(id) {
         });
         
         if (response.status === 401) {
-            alert('Sesión expirada. Por favor inicia sesión nuevamente.');
-            localStorage.removeItem('auth_token');
-            window.location.href = '/';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión expirada',
+                text: 'Por favor inicia sesión nuevamente',
+                confirmButtonColor: '#667eea'
+            }).then(() => {
+                localStorage.removeItem('auth_token');
+                window.location.href = '/';
+            });
             return;
         }
         
@@ -297,6 +354,8 @@ async function editProduct(id) {
         }
         
         const product = await response.json();
+        
+        Swal.close(); // Cerrar loading
         
         document.getElementById('productId').value = product.id;
         document.getElementById('name').value = product.name;
@@ -314,17 +373,53 @@ async function editProduct(id) {
         document.querySelector('.btn-save').innerHTML = '<i class="fas fa-save"></i> Actualizar Producto';
         
         window.scrollTo({ top: 0, behavior: 'smooth' });
+        
+        Swal.fire({
+            icon: 'info',
+            title: 'Modo edición',
+            text: 'Ahora puedes modificar el producto',
+            confirmButtonColor: '#667eea',
+            timer: 1500,
+            timerProgressBar: true,
+            showConfirmButton: false
+        });
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al cargar el producto');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: 'No se pudo cargar el producto',
+            confirmButtonColor: '#667eea'
+        });
     }
 }
 
 // Eliminar producto
 async function deleteProduct(id) {
-    if (!confirm('¿Estás seguro de eliminar este producto?')) return;
+    const result = await Swal.fire({
+        title: '¿Eliminar producto?',
+        text: 'Esta acción no se puede deshacer',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    });
+    
+    if (!result.isConfirmed) return;
     
     const authToken = localStorage.getItem('auth_token');
+    
+    // Mostrar loading
+    Swal.fire({
+        title: 'Eliminando producto...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
     
     try {
         const response = await fetch(`/api/products/${id}`, {
@@ -337,24 +432,49 @@ async function deleteProduct(id) {
         });
         
         if (response.status === 401) {
-            alert('Sesión expirada. Por favor inicia sesión nuevamente.');
-            localStorage.removeItem('auth_token');
-            window.location.href = '/';
+            Swal.fire({
+                icon: 'warning',
+                title: 'Sesión expirada',
+                text: 'Por favor inicia sesión nuevamente',
+                confirmButtonColor: '#667eea'
+            }).then(() => {
+                localStorage.removeItem('auth_token');
+                window.location.href = '/';
+            });
             return;
         }
         
         const result = await response.json();
         
         if (response.ok) {
-            alert(result.message || 'Producto eliminado exitosamente');
-            loadProducts();
+            Swal.fire({
+                icon: 'success',
+                title: '¡Eliminado!',
+                text: 'El producto ha sido eliminado correctamente',
+                confirmButtonColor: '#667eea',
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
+            }).then(() => {
+                loadProducts();
+            });
         } else {
-            alert('Error al eliminar el producto');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'No se pudo eliminar el producto',
+                confirmButtonColor: '#667eea'
+            });
             console.error('Error:', result);
         }
     } catch (error) {
         console.error('Error:', error);
-        alert('Error al eliminar el producto');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor',
+            confirmButtonColor: '#667eea'
+        });
     }
 }
 

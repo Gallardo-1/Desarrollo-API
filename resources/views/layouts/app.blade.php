@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{{ asset('css/navbarnavbar.css') }}?v={{ rand(1000, 9999) }}">
      <link rel="stylesheet" href="{{ asset('css/footer.css') }}?v={{ rand(1000, 9999) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     @yield('styles')
 </head>
 <body>
@@ -135,30 +137,58 @@
         </div>
     </footer>
 
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const token = document.querySelector('meta[name="csrf-token"]').content;
 
         // Función de logout
         async function logout() {
-            const authToken = localStorage.getItem('auth_token');
-            
-            try {
-                const response = await fetch('/api/logout', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${authToken}`,
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': token
-                    }
-                });
+            const result = await Swal.fire({
+                title: '¿Cerrar sesión?',
+                text: '¿Estás seguro de que quieres cerrar sesión?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#667eea',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Sí, cerrar sesión',
+                cancelButtonText: 'Cancelar'
+            });
+
+            if (result.isConfirmed) {
+                const authToken = localStorage.getItem('auth_token');
                 
-                if (response.ok) {
+                try {
+                    const response = await fetch('/api/logout', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${authToken}`,
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': token
+                        }
+                    });
+                    
+                    if (response.ok) {
+                        localStorage.removeItem('auth_token');
+                        localStorage.removeItem('user_data');
+                        
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sesión cerrada',
+                            text: 'Has cerrado sesión correctamente',
+                            confirmButtonColor: '#667eea',
+                            timer: 1500,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        }).then(() => {
+                            window.location.href = '/';
+                        });
+                    }
+                } catch (error) {
                     localStorage.removeItem('auth_token');
+                    localStorage.removeItem('user_data');
                     window.location.href = '/';
                 }
-            } catch (error) {
-                localStorage.removeItem('auth_token');
-                window.location.href = '/';
             }
         }
 

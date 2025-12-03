@@ -207,17 +207,47 @@
     });
 
     // Verificar autenticación y abrir modal
-    function checkAuthAndOpenModal() {
+    async function checkAuthAndOpenModal() {
         const token = localStorage.getItem('auth_token');
         console.log('Verificando autenticación...');
         console.log('Token encontrado:', token ? 'Sí' : 'No');
         
         if (!token) {
-            alert('Debes iniciar sesión para poder opinar');
-            setTimeout(() => {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Inicia sesión',
+                text: 'Debes iniciar sesión para poder opinar',
+                confirmButtonColor: '#667eea',
+                confirmButtonText: 'Ir al login'
+            }).then(() => {
                 window.location.href = '/login';
-            }, 1000);
+            });
             return;
+        }
+
+        // Verificar si el usuario ya comentó en este producto
+        try {
+            const productId = {{ $product->id }};
+            const response = await fetch(`/api/comments/check-user-comment/${productId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/json'
+                }
+            });
+
+            const result = await response.json();
+
+            if (result.has_commented) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Ya opinaste',
+                    text: 'Ya has escrito un comentario en este producto. Solo puedes comentar una vez por producto.',
+                    confirmButtonColor: '#667eea'
+                });
+                return;
+            }
+        } catch (error) {
+            console.error('Error al verificar comentario:', error);
         }
         
         console.log('Intentando abrir modal...');
@@ -256,7 +286,14 @@
 
     // Función para agregar al carrito
     function addToCart(productId) {
-        alert('Producto agregado al carrito (funcionalidad pendiente)');
+        Swal.fire({
+            icon: 'info',
+            title: 'Funcionalidad pendiente',
+            text: 'Producto agregado al carrito (funcionalidad en desarrollo)',
+            confirmButtonColor: '#667eea',
+            timer: 2000,
+            timerProgressBar: true
+        });
     }
 
     // Enviar formulario de opinión con AJAX
@@ -272,8 +309,14 @@
                 const authToken = localStorage.getItem('auth_token');
                 
                 if (!authToken) {
-                    alert('Debes iniciar sesión para enviar una opinión');
-                    window.location.href = '/login';
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Sesión requerida',
+                        text: 'Debes iniciar sesión para enviar una opinión',
+                        confirmButtonColor: '#667eea'
+                    }).then(() => {
+                        window.location.href = '/login';
+                    });
                     return;
                 }
                 
@@ -286,6 +329,16 @@
 
                 console.log('Datos a enviar:', data);
                 console.log('Token:', authToken.substring(0, 20) + '...');
+
+                // Mostrar loading
+                Swal.fire({
+                    title: 'Enviando opinión...',
+                    text: 'Por favor espera',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
 
                 try {
                     const response = await fetch('/api/comments', {
@@ -304,24 +357,55 @@
                     console.log('Resultado:', result);
 
                     if (response.ok) {
-                        alert('¡Opinión enviada exitosamente!');
                         closeModal();
-                        setTimeout(() => {
+                        Swal.fire({
+                            icon: 'success',
+                            title: '¡Gracias por tu opinión!',
+                            text: 'Tu comentario ha sido publicado exitosamente',
+                            confirmButtonColor: '#667eea',
+                            timer: 2000,
+                            timerProgressBar: true,
+                            showConfirmButton: false
+                        }).then(() => {
                             location.reload();
-                        }, 500);
+                        });
                     } else {
                         if (response.status === 401) {
-                            alert('Tu sesión ha expirado. Por favor inicia sesión nuevamente.');
-                            localStorage.removeItem('auth_token');
-                            localStorage.removeItem('user_data');
-                            window.location.href = '/login';
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Sesión expirada',
+                                text: 'Tu sesión ha expirado. Por favor inicia sesión nuevamente',
+                                confirmButtonColor: '#667eea'
+                            }).then(() => {
+                                localStorage.removeItem('auth_token');
+                                localStorage.removeItem('user_data');
+                                window.location.href = '/login';
+                            });
+                        } else if (response.status === 409) {
+                            closeModal();
+                            Swal.fire({
+                                icon: 'info',
+                                title: 'Ya comentaste',
+                                text: result.message || 'Ya has escrito un comentario en este producto',
+                                confirmButtonColor: '#667eea'
+                            });
                         } else {
-                            alert('Error: ' + (result.message || 'No se pudo enviar la opinión'));
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: result.message || 'No se pudo enviar la opinión',
+                                confirmButtonColor: '#667eea'
+                            });
                         }
                     }
                 } catch (error) {
                     console.error('Error completo:', error);
-                    alert('Error al enviar la opinión: ' + error.message);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error de conexión',
+                        text: 'No se pudo conectar con el servidor',
+                        confirmButtonColor: '#667eea'
+                    });
                 }
             });
         }

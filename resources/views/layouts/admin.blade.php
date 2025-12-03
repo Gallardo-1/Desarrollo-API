@@ -7,11 +7,15 @@
     <title>@yield('title', 'Admin - Mi Tienda')</title>
     <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ rand(1000, 9999) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     @yield('styles')
 </head>
 <body class="admin-body">
     @yield('content')
 
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const token = document.querySelector('meta[name="csrf-token"]').content;
     </script>

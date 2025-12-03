@@ -5,18 +5,35 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Mi Tienda')</title>
-    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ time() }}">
+    <link rel="stylesheet" href="{{ asset('css/app.css') }}?v={{ rand(1000, 9999) }}">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SweetAlert2 CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
     @yield('styles')
 </head>
 <body>
     @yield('content')
 
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         const token = document.querySelector('meta[name="csrf-token"]').content;
 
         function showAlert(message, type = 'success') {
-            alert(message);
+            const config = {
+                title: type === 'success' ? '¡Éxito!' : 'Error',
+                text: message,
+                icon: type,
+                confirmButtonColor: '#667eea',
+                confirmButtonText: 'OK'
+            };
+
+            if (type === 'success') {
+                config.timer = 2000;
+                config.timerProgressBar = true;
+            }
+
+            Swal.fire(config);
         }
     </script>
     @yield('scripts')

@@ -201,6 +201,7 @@
     align-items: center;
     justify-content: center;
     transition: transform 0.3s ease;
+    position: relative;
 }
 
 .product-image-link:hover .product-image {
@@ -407,4 +408,27 @@
         padding: 0.75rem 1rem;
         font-size: 0.9rem;
     }
+}
+
+/* Badge para productos destacados */
+.badge-featured {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+    color: #333;
+    padding: 0.5rem 1rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    box-shadow: 0 3px 10px rgba(255, 215, 0, 0.4);
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    z-index: 10;
+}
+
+.badge-featured i {
+    color: #333;
+    font-size: 0.8rem;
 }

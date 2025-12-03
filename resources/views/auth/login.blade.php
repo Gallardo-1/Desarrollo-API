@@ -49,6 +49,16 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
+    // Mostrar loading
+    Swal.fire({
+        title: 'Iniciando sesión...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
     try {
         const response = await fetch('/api/login', {
             method: 'POST',
@@ -66,22 +76,37 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
             localStorage.setItem('auth_token', data.access_token);
             localStorage.setItem('user_data', JSON.stringify(data.user));
             
-            showAlert('¡Inicio de sesión exitoso!');
-            
-            // Redirigir según el tipo de usuario
-            setTimeout(() => {
+            Swal.fire({
+                icon: 'success',
+                title: '¡Bienvenido!',
+                text: 'Inicio de sesión exitoso',
+                confirmButtonColor: '#667eea',
+                timer: 1500,
+                timerProgressBar: true,
+                showConfirmButton: false
+            }).then(() => {
                 if (data.user && data.user.is_admin === true) {
                     window.location.href = '/admin/products';
                 } else {
                     window.location.href = '/home';
                 }
-            }, 1500);
+            });
         } else {
-            showAlert(data.message || 'Error al iniciar sesión', 'error');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: data.message || 'Credenciales incorrectas',
+                confirmButtonColor: '#667eea'
+            });
         }
     } catch (error) {
         console.error('Error:', error);
-        showAlert('Error de conexión', 'error');
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor',
+            confirmButtonColor: '#667eea'
+        });
     }
 });
 </script>

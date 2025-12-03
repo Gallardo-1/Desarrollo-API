@@ -51,11 +51,22 @@ document.getElementById('registerForm').addEventListener('submit', async functio
     const email = document.getElementById('email').value;
     const password = document.getElementById('password').value;
     
+    // Mostrar loading
+    Swal.fire({
+        title: 'Registrando usuario...',
+        text: 'Por favor espera',
+        allowOutsideClick: false,
+        didOpen: () => {
+            Swal.showLoading();
+        }
+    });
+    
     try {
         const response = await fetch('/api/register', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
+                'Accept': 'application/json',
                 'X-CSRF-TOKEN': token
             },
             body: JSON.stringify({ name, email, password })
@@ -64,13 +75,46 @@ document.getElementById('registerForm').addEventListener('submit', async functio
         const data = await response.json();
         
         if (response.ok) {
-            showAlert('¡Registro exitoso! Puedes iniciar sesión ahora.');
-            setTimeout(() => window.location.href = '/', 2000);
+            Swal.fire({
+                icon: 'success',
+                title: '¡Registro exitoso!',
+                html: `
+                    <p>Tu cuenta ha sido creada correctamente</p>
+                    <p class="text-muted">Serás redirigido al login...</p>
+                `,
+                confirmButtonColor: '#667eea',
+                timer: 2500,
+                timerProgressBar: true,
+                showConfirmButton: false
+            }).then(() => {
+                window.location.href = '/login';
+            });
         } else {
-            showAlert(data.message || 'Error en el registro', 'error');
+            let errorMessage = 'Error en el registro';
+            
+            // Mostrar errores de validación
+            if (data.errors) {
+                const errors = Object.values(data.errors).flat();
+                errorMessage = errors.join('<br>');
+            } else if (data.message) {
+                errorMessage = data.message;
+            }
+            
+            Swal.fire({
+                icon: 'error',
+                title: 'Error en el registro',
+                html: errorMessage,
+                confirmButtonColor: '#667eea'
+            });
         }
     } catch (error) {
-        showAlert('Error de conexión', 'error');
+        console.error('Error:', error);
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de conexión',
+            text: 'No se pudo conectar con el servidor',
+            confirmButtonColor: '#667eea'
+        });
     }
 });
 </script>

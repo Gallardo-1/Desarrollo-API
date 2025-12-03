@@ -233,10 +233,20 @@ class ProductController extends Controller
     public function indexWeb()
     {
         try {
-            $products = Product::orderBy('id', 'desc')->get();
-            return view('home', compact('products'));
+            // Obtener todos los productos con sus relaciones
+            $products = Product::with(['ratings', 'comments'])->orderBy('id', 'desc')->get();
+            
+            // Calcular el promedio de rating para cada producto
+            $products->each(function ($product) {
+                $product->average_rating = $product->ratings->avg('rating') ?? 0;
+            });
+            
+            // Obtener los 3 productos mejor valorados
+            $topRatedProducts = $products->sortByDesc('average_rating')->take(3);
+            
+            return view('home', compact('products', 'topRatedProducts'));
         } catch (\Exception $e) {
-            return view('home', ['products' => []]);
+            return view('home', ['products' => collect(), 'topRatedProducts' => collect()]);
         }
     }
 
